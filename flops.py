@@ -31,7 +31,11 @@ def fetchImage(imageId):
 def start():
     print(datetime.datetime.now())
     try:
-        file=open("imageIds.txt", "r")
+        file = ""
+        try:
+            file=open("imageIds.txt", "r")
+        except:
+            print("Error while open file imageIds.txt")
         for line in file:
             try:
                 line=line.replace("\n","")
