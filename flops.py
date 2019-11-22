@@ -7,48 +7,52 @@ import time
 import datetime
 import sys
 
-
-def writeFile(hash):
-    print("  Write hash ", hash)
-    f=open("ts.txt", "w")
-    f.write(hash)
+def writeFile(serviceName, timeHash):
+    print("  Write hash ", timeHash)
+    f=open(str(serviceName + ".txt"), "w")
+    f.write(timeHash)
     f.close()
 
 def startService(repoName, serviceName):
     subprocess.run(["docker", "service", "update", "--image", repoName, serviceName])
     print("  Update docker service")
 
-def start():
-    while True:
-        try:
-            print(datetime.datetime.now())
-            r=requests.get(url = URL)
-            data=r.json()
-            #print(data)
-            timeHash=data['timeHash']
-            repoName=data['repoName']
-            tag=data['tag']
-            name=str(repoName + ":" +  tag)
-            print(str("  " + name))
-            e=path.exists('ts.txt')
+def fetchImage(imageId):
+    print(datetime.datetime.now())
+    path=str(URL + imageId)
+    print(path)
+    r=requests.get(path)
+    data=r.json()
+    timeHash=data['timeHash']
+    repoName=data['repoName']
+    tag=data['tag']
+    repoName=str(repoName + ":" +  tag)
+    return timeHash, repoName
 
-            if e is False:
-                print("  No File detected")
-                writeFile(timeHash)
-                startService(name, serviceName)
+def start():
+    try:
+        file=open("imageIds.txt", "r")
+        for line in file:
+            line=line.replace("\n","")
+            fields=line.split(",")
+            imageId=fields[0]
+            serviceName=fields[1]
+            timeHash, repoName=fetchImage(imageId)
+            exists=path.exists(str(serviceName) + ".txt")
+            if exists is False:
+                writeFile(serviceName, timeHash)
+                startService(repoName, serviceName)
             else:
-                f=open("ts.txt", "r")
-                if f.mode == 'r':
-                    contents =f.read()
+                f=open(str(serviceName + ".txt"), "r")
+                if f.mode == "r":
+                    contents=f.read()
                     if contents != timeHash:
-                        print(timeHash)
-                        writeFile(timeHash)
-                        startService(name, serviceName)
-        except:
-            print(" ! Error occurred")
-        print()
-        time.sleep(60 * 5)
+                        writeFile(serviceName, timeHash)
+                        startService(repoName, serviceName)
+
+    except:
+        print(" ! Error occurred")
+    print()
 URL = sys.argv[1]
-serviceName = sys.argv[2]
 
 start()
