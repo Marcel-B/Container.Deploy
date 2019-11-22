@@ -18,8 +18,7 @@ def startService(repoName, serviceName):
     print("  Update docker service")
 
 def fetchImage(imageId):
-    print(datetime.datetime.now())
-    path=str(URL + imageId)
+    path=str("  " + URL + imageId)
     print(path)
     r=requests.get(path)
     data=r.json()
@@ -30,28 +29,33 @@ def fetchImage(imageId):
     return timeHash, repoName
 
 def start():
+    print(datetime.datetime.now())
     try:
         file=open("imageIds.txt", "r")
         for line in file:
-            line=line.replace("\n","")
-            fields=line.split(",")
-            imageId=fields[0]
-            serviceName=fields[1]
-            timeHash, repoName=fetchImage(imageId)
-            exists=path.exists(str(serviceName) + ".txt")
-            if exists is False:
-                writeFile(serviceName, timeHash)
-                startService(repoName, serviceName)
-            else:
-                f=open(str(serviceName + ".txt"), "r")
-                if f.mode == "r":
-                    contents=f.read()
-                    if contents != timeHash:
-                        writeFile(serviceName, timeHash)
-                        startService(repoName, serviceName)
+            try:
+                line=line.replace("\n","")
+                fields=line.split(",")
+                imageId=fields[0]
+                serviceName=fields[1]
+                timeHash, repoName=fetchImage(imageId)
+                exists=path.exists(str(serviceName) + ".txt")
+                if exists is False:
+                    writeFile(serviceName, timeHash)
+                    startService(repoName, serviceName)
+                else:
+                    f=open(str(serviceName + ".txt"), "r")
+                    if f.mode == "r":
+                        contents=f.read()
+                        if contents != timeHash:
+                            writeFile(serviceName, timeHash)
+                            startService(repoName, serviceName)
+            except:
+                print(str("! Error with with line '" + line + "'"))
+                print()
 
     except:
-        print(" ! Error occurred")
+        print("! Error occurred")
     print()
 URL = sys.argv[1]
 
